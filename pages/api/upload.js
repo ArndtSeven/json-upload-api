@@ -32,7 +32,8 @@ export default async function handler(req, res) {
     const fileName = file.originalFilename || `uploaded_${Date.now()}.json`;
 
     // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
-    const uploadDir = path.join(os.tmpdir(), fileName);
+    const uploadDir = path.join(process.cwd(), 'uploads', fileName);
+
 
     await fs.rename(file.filepath, uploadDir);
 
