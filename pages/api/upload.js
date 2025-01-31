@@ -1,5 +1,5 @@
 import { IncomingForm } from 'formidable';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 export const config = {
@@ -13,29 +13,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const form = new IncomingForm({
-    uploadDir: '/tmp',
-    keepExtensions: true,
-  });
+  const form = new IncomingForm({ keepExtensions: true });
 
-  form.parse(req, (err, fields, files) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error parsing the file' });
-    }
+  try {
+    const [fields, files] = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve([fields, files]);
+      });
+    });
 
     if (!files.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const file = files.file[0];
-    const newPath = path.join('/tmp', file.originalFilename);
+    const file = Array.isArray(files.file) ? files.file[0] : files.file;
+    const newPath = path.join('/tmp', file.originalFilename || 'uploaded-file');
 
-    fs.rename(file.filepath, newPath, (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error saving the file' });
-      }
+    await fs.rename(file.filepath, newPath);
 
-      res.status(200).json({ message: 'File uploaded successfully', filePath: newPath });
-    });
-  });
+    return res.status(200).json({ message: 'File uploaded successfully', filePath: newPath });
+  } catch (error) {
+    return res.status(500).json({ error: `Server error: ${error.message}` });
+  }
 }
