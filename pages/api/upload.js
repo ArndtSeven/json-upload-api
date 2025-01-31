@@ -36,7 +36,14 @@ export default async function handler(req, res) {
 
     await fs.rename(file.filepath, uploadDir);
 
-    return res.status(200).json({ message: 'File uploaded successfully', filePath: uploadDir });
+    // **💡 NEUE CODE-ZEILE HIER EINFÜGEN:**
+    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
+
+    return res.status(200).json({ 
+      message: 'File uploaded successfully', 
+      filePath: uploadDir 
+    });
+
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
   }
