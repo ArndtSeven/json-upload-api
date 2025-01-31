@@ -32,11 +32,12 @@ export default async function handler(req, res) {
     const fileName = file.originalFilename || `uploaded_${Date.now()}.json`;
 
     // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
-    const uploadDir = path.join(process.cwd(), 'uploads', fileName);
-
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', fileName);
     // **Erstelle den Ordner, falls er noch nicht existiert**
-    if (!fs.existsSync(path.dirname(uploadDir))) {
-      fs.mkdirSync(path.dirname(uploadDir), { recursive: true });
+   if (!fs.existsSync(path.dirname(uploadDir))) {
+  fs.mkdirSync(path.dirname(uploadDir), { recursive: true });
+}
+
     }
 
     await fs.rename(file.filepath, uploadDir);
