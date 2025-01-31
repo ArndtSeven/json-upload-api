@@ -1,11 +1,11 @@
-import { IncomingForm } from 'formidable';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+const { IncomingForm } = require('formidable'); // Verwendung von require statt import
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Verhindert, dass Next.js den Body automatisch parst
   },
 };
 
@@ -14,9 +14,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const form = new IncomingForm({ keepExtensions: true });
+  const form = new IncomingForm({ keepExtensions: true }); // Initialisierung des Formulars
 
   try {
+    // Parsen der Formulardaten
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -29,21 +30,15 @@ export default async function handler(req, res) {
     }
 
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
-    const fileName = file.originalFilename || `uploaded_${Date.now()}.json`;
+    const fileName = file.originalFilename || `uploaded_${Date.now()}.json`; // Falls kein Name, dann timestamp
 
     // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', fileName);
-    // **Erstelle den Ordner, falls er noch nicht existiert**
-   if (!fs.existsSync(path.dirname(uploadDir))) {
-  fs.mkdirSync(path.dirname(uploadDir), { recursive: true });
-}
+    const uploadDir = path.join(os.tmpdir(), fileName); // Verwenden des temporären Verzeichnisses
 
-    }
+    await fs.rename(file.filepath, uploadDir); // Umbenennen der Datei und Speichern an gewünschtem Ort
 
-    await fs.rename(file.filepath, uploadDir);
-
-    // **Log-Ausgabe für den Speicherort der Datei**
-    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
+    // **💡 NEUE CODE-ZEILE HIER EINFÜGEN:**
+    console.log(`✅ Datei gespeichert unter: ${uploadDir}`); // Debugging
 
     return res.status(200).json({ 
       message: 'File uploaded successfully', 
@@ -52,5 +47,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
+    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
   }
 }
