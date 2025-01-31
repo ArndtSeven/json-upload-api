@@ -46,5 +46,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
+    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
+
   }
 }
