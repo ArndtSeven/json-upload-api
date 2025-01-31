@@ -1,0 +1,7 @@
+{
+  "name": "json-upload-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "formidable": "^2.0.0"
+  }
+}
