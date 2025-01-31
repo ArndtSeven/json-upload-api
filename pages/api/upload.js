@@ -1,11 +1,10 @@
-const { IncomingForm } = require('formidable'); // Verwendung von require statt import
-const fs = require('fs/promises');
-const os = require('os');
-const path = require('path');
+import { IncomingForm } from 'formidable';
+import fs from 'fs/promises';
+import path from 'path';
 
 export const config = {
   api: {
-    bodyParser: false, // Verhindert, dass Next.js den Body automatisch parst
+    bodyParser: false,
   },
 };
 
@@ -14,10 +13,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const form = new IncomingForm({ keepExtensions: true }); // Initialisierung des Formulars
+  const form = new IncomingForm({ keepExtensions: true });
 
   try {
-    // Parsen der Formulardaten
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -30,23 +28,19 @@ export default async function handler(req, res) {
     }
 
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
-    const fileName = file.originalFilename || `uploaded_${Date.now()}.json`; // Falls kein Name, dann timestamp
+    const fileName = file.originalFilename || `uploaded_${Date.now()}.json`;
 
-    // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
-    const uploadDir = path.join(os.tmpdir(), fileName); // Verwenden des temporären Verzeichnisses
+    // Speichert die Datei im /tmp-Ordner, der für Vercel vorgesehen ist
+    const uploadDir = path.join('/tmp', fileName);
 
-    await fs.rename(file.filepath, uploadDir); // Umbenennen der Datei und Speichern an gewünschtem Ort
+    // Datei speichern
+    await fs.rename(file.filepath, uploadDir);
 
-    // **💡 NEUE CODE-ZEILE HIER EINFÜGEN:**
-    console.log(`✅ Datei gespeichert unter: ${uploadDir}`); // Debugging
-
-    return res.status(200).json({ 
-      message: 'File uploaded successfully', 
-      filePath: uploadDir 
+    return res.status(200).json({
+      message: 'File uploaded successfully',
+      filePath: uploadDir,
     });
-
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
-    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
   }
 }
