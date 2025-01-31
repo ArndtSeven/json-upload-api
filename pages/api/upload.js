@@ -1,5 +1,6 @@
 import { IncomingForm } from 'formidable';
 import fs from 'fs/promises';
+import os from 'os';
 import path from 'path';
 
 export const config = {
@@ -28,11 +29,14 @@ export default async function handler(req, res) {
     }
 
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
-    const newPath = path.join('/tmp', file.originalFilename || 'uploaded-file');
+    const fileName = file.originalFilename || `uploaded_${Date.now()}.json`;
 
-    await fs.rename(file.filepath, newPath);
+    // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
+    const uploadDir = path.join(os.tmpdir(), fileName);
 
-    return res.status(200).json({ message: 'File uploaded successfully', filePath: newPath });
+    await fs.rename(file.filepath, uploadDir);
+
+    return res.status(200).json({ message: 'File uploaded successfully', filePath: uploadDir });
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
   }
