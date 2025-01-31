@@ -34,10 +34,14 @@ export default async function handler(req, res) {
     // **🚀 WICHTIGER FIX** – Verzeichnis für temporäre Dateien richtig setzen
     const uploadDir = path.join(process.cwd(), 'uploads', fileName);
 
+    // **Erstelle den Ordner, falls er noch nicht existiert**
+    if (!fs.existsSync(path.dirname(uploadDir))) {
+      fs.mkdirSync(path.dirname(uploadDir), { recursive: true });
+    }
 
     await fs.rename(file.filepath, uploadDir);
 
-    // **💡 NEUE CODE-ZEILE HIER EINFÜGEN:**
+    // **Log-Ausgabe für den Speicherort der Datei**
     console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
 
     return res.status(200).json({ 
@@ -47,7 +51,5 @@ export default async function handler(req, res) {
 
   } catch (error) {
     return res.status(500).json({ error: `Server error: ${error.message}` });
-    console.log(`✅ Datei gespeichert unter: ${uploadDir}`);
-
   }
 }
